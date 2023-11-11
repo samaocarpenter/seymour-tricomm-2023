@@ -17,6 +17,7 @@ nc_counties_url = "https://www2.census.gov/geo/tiger/GENZ2022/shp/cb_2022_us_cou
 
 # Download and extract the shapefile
 gdf_counties = gpd.read_file(nc_counties_url)
+gdf_tracts = gpd.read_file('tl_2019_37_tract.zip')
 
 # Filter North Carolina counties
 nc_counties = gdf_counties[gdf_counties['STUSPS'] == 'NC']
@@ -46,8 +47,14 @@ nc_urban = pd.read_csv('nc_counties.csv')
 nc_counties = nc_counties.merge(nc_urban, on='NAME')
 
 
-# Calculate distance to nearest pharmacy for each census district
+# Calculate distance to nearest pharmacy and accessability metric for each census district
+
+n = 0.5 # power for accessability metric distance decay
+
 census_gdf['distance_to_pharmacy'] = census_gdf.geometry.apply(lambda x: pharmacies_gdf.distance(x).min())
+census_gdf['sum_of_distances'] = census_gdf.geometry.apply(lambda x: sum(pharmacies_gdf.distance(x)))
+census_gdf['accessability'] = census_gdf.geometry.apply(lambda x: sum(1/pharmacies_gdf.distance(x)))
+
 
 # Perform a spatial join between census_gdf and nc_counties
 census_counties = gpd.sjoin(census_gdf, nc_counties, op='within')
@@ -67,6 +74,6 @@ census_counties['pharmacy_desert'] = census_counties.apply(is_pharmacy_desert, a
 # Plot the census data with the new column
 fig, ax = plt.subplots(figsize=(12, 12))
 nc_counties.plot(ax=ax, column='URBAN', cmap='RdYlGn_r', alpha=0.5, legend=False, edgecolor='black')
-census_counties.plot(ax=ax, column='pharmacy_desert', cmap='coolwarm', legend=True, markersize=3, legend_kwds={'labels': {True: 'Pharmacy desert', False: 'Not a pharmacy desert'}})
+census_counties.plot(ax=ax, column='accessability', cmap='coolwarm', legend=True, markersize=3)
 #pharmacies_gdf.plot(ax=ax, color='black', markersize=3)
 plt.show()
