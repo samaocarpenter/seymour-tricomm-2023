@@ -24,6 +24,10 @@ nc_counties = gdf_counties[gdf_counties['STUSPS'] == 'NC']
 # Import spatial.csv from NC_Census_2021
 census_df = pd.read_csv('NC_Census_2021/spatial.csv')
 
+# Import total county population
+county_pop = pd.read_csv('NC_Census_2021/table01.csv')
+
+print(county_pop.head())
 
 # Create a GeoDataFrame from the spatial data's Latitude and Longitude columns
 census_gdf = gpd.GeoDataFrame(
