@@ -39,15 +39,34 @@ census_gdf = census_gdf.to_crs('EPSG:32119')
 pharmacies_gdf = pharmacies_gdf.to_crs('EPSG:32119')
 nc_counties = nc_counties.to_crs('EPSG:32119')
 
+# Import county urban/rural classification as a DataFrame
+nc_urban = pd.read_csv('nc_counties.csv')
+
+# Merge the urban/rural classification with the county file
+nc_counties = nc_counties.merge(nc_urban, on='NAME')
+
+
 # Calculate distance to nearest pharmacy for each census district
 census_gdf['distance_to_pharmacy'] = census_gdf.geometry.apply(lambda x: pharmacies_gdf.distance(x).min())
 
-# Add a binary variable that measures whether the distance is greater or lesser than one mile
-census_gdf['within_one_mile'] = census_gdf['distance_to_pharmacy'] <= 1609.34  # 1 mile = 1609.34 meters
+# Perform a spatial join between census_gdf and nc_counties
+census_counties = gpd.sjoin(census_gdf, nc_counties, op='within')
+
+# Create a function to determine pharmacy desert
+def is_pharmacy_desert(row):
+    if row['URBAN'] == 2:
+        return row['distance_to_pharmacy'] > 1609.34  # 1 mile = 1609.34 meters
+    elif row['URBAN'] == 1:
+        return row['distance_to_pharmacy'] > 3218.69  # 2 miles = 3218.69 meters
+    else:
+        return row['distance_to_pharmacy'] > 8046.72  # 5 miles = 8046.72 meters
+
+# Add a column to census_counties to indicate whether it is a pharmacy desert
+census_counties['pharmacy_desert'] = census_counties.apply(is_pharmacy_desert, axis=1)
 
 # Plot the census data with the new column
 fig, ax = plt.subplots(figsize=(12, 12))
-nc_counties.plot(ax=ax, color='white', edgecolor='black')
-census_gdf.plot(ax=ax, column='within_one_mile', cmap='coolwarm', legend=True, markersize=3)
-pharmacies_gdf.plot(ax=ax, color='black', markersize=3, marker='s')
+nc_counties.plot(ax=ax, column='URBAN', cmap='RdYlGn_r', alpha=0.5, legend=False, edgecolor='black')
+census_counties.plot(ax=ax, column='pharmacy_desert', cmap='coolwarm', legend=True, markersize=3, legend_kwds={'labels': {True: 'Pharmacy desert', False: 'Not a pharmacy desert'}})
+#pharmacies_gdf.plot(ax=ax, color='black', markersize=3)
 plt.show()
