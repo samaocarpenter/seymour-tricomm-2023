@@ -2,7 +2,6 @@ import pandas as pd
 import geopandas as gpd
 import numpy as np
 import matplotlib.pyplot as plt
-# Load census tract data into a GeoDataFrame
 from shapely.geometry import Point
 
 # set numpy seed to 0
