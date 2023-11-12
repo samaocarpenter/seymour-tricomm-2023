@@ -34,7 +34,7 @@ df["vulnerability"] /= (df["B01001_001E"]) + 1
 
 tracts_gdf = gpd.read_file('tl_2021_37_tract.zip')
 tracts_gdf = tracts_gdf.to_crs('EPSG:4326')
-tracts_gdf["GEOID"] = tracts_gdf["GEOID"].astype(int)
+tracts_gdf["GEOID"] = tracts_gdf["GEOID"].astype(np.int64)
 
 tracts = tracts_gdf.merge(df, on='GEOID', how="outer")
 
@@ -42,6 +42,8 @@ tracts = tracts[(tracts.geometry.centroid.x <= -78.6) | (tracts['B01001_001E'] >
 
 
 fig, ax = plt.subplots(figsize=(8,8))
+
+tracts = tracts.to_crs("EPSG:32119")
 
 # plot tracts_gdf
 tracts.plot(ax=ax, column='vulnerability', edgecolor='gray', linewidth=0.0, cmap='RdYlBu_r', legend=True)
