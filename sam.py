@@ -40,15 +40,31 @@ tracts = tracts_gdf.merge(df, on='GEOID', how="outer")
 
 tracts = tracts[(tracts.geometry.centroid.x <= -78.6) | (tracts['B01001_001E'] > 0)]
 
+## Import county borders
+counties = gpd.read_file('county_boundary.zip')
+# Change the projection
+counties = counties.to_crs('EPSG:32119')
 
+print(tracts.head())
+print(counties.head())
+
+# group tracts by county and take the mean of the vulnerability column
+counties_df = tracts.groupby('COUNTYFP')['vulnerability'].mean().reset_index()
+
+# merge with counties dataframe
+counties = counties.merge(counties_df, left_on='FIPS', right_on='COUNTYFP', how='outer')
+
+# plot counties by vulnerability
 fig, ax = plt.subplots(figsize=(8,8))
 
-tracts = tracts.to_crs("EPSG:32119")
+counties.plot(ax=ax, column='vulnerability', edgecolor='gray', linewidth=0.0, cmap='RdYlBu_r', legend=True)
 
-# plot tracts_gdf
-tracts.plot(ax=ax, column='vulnerability', edgecolor='gray', linewidth=0.0, cmap='RdYlBu_r', legend=True)
+# add labels and title
+ax.set_xlabel('Longitude')
+ax.set_ylabel('Latitude')
+ax.set_title('Vulnerability by County')
 
 plt.show()
 
 # save plot
-fig.savefig('vulnerability.png', dpi=300, bbox_inches='tight')
+fig.savefig('county_vulnerability.png', dpi=300, bbox_inches='tight')
