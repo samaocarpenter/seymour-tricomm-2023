@@ -2,10 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy
 
-H_YEAR = 8760 - 2920
-weeks = 40 #weeks of work in a year
-workweek = 45 #hours of work in a week
-commute = 90 #commute time in a day
+H_YEAR = (8760 - 2920)/10
 
 def create_array(table_num):
     if table_num > 9:
@@ -93,11 +90,18 @@ for m in range(np.shape(worktime_aggr)[0]):
     worktime_expct = np.dot(loc, workhours)/worktime_expected[m,1]
     worktime_expected[m, 2] = worktime_expct
 
-print(worktime_expected)
+def mobility(dis, age):
+    return 10 * np.exp(-1/(dis*(1 - age * age)))
 
-def mobility(disability, age):
-    return np.exp(-1/(disability(1 - age^2)))
+def free_time(hours_year, work):
+    return 22/(1 + np.exp((work - 1147.5)/hours_year))
 
-def free_time(hours_year, weeks, workweek, commute):
-    return hours_year/(1 + np.exp(weeks * (workweek + commute * 5)))
+def rich(inc):
+    return np.log(inc)
 
+mob = mobility(disabilities_expected[:, 2], ages_expected[:, 2])
+free = free_time(H_YEAR, worktime_expected[:, 2])
+money = rich(income_expected[:, 2])
+
+
+print(mob, free, money)
