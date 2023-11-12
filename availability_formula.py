@@ -1,6 +1,5 @@
 import numpy as np
-import matplotlib.pyplot as plt
-import scipy
+import pandas as pd
 
 H_YEAR = (8760 - 2920)/10
 
@@ -33,6 +32,8 @@ age_aggr = np.zeros((np.shape(age)[0], 25))
 disability_aggr = np.zeros((np.shape(disability)[0], 8))
 income_aggr = np.zeros((np.shape(income)[0], 22))
 worktime_aggr = np.zeros((np.shape(income)[0], 21))
+
+geoid = age[:, 0]
 
 ages = [2.5, 7, 12, 16, 18.5, 20, 21, 23, 27, 32, 37, 42, 47, 52, 57, 60.5, 63, 65.5, 68, 72, 77, 82, 92.5]
 disabilities = [2.5, 11, 25, 49.5, 69.5, 85]
@@ -102,6 +103,8 @@ def rich(inc):
 mob = mobility(disabilities_expected[:, 2], ages_expected[:, 2])
 free = free_time(H_YEAR, worktime_expected[:, 2])
 money = rich(income_expected[:, 2])
+df_staging = {"geoid": geoid, "mobility": mob, "free_time": free, "income": money}
 
+results = pd.DataFrame(df_staging)
 
-print(mob, free, money)
+print(results)
